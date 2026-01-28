@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, RotateCcw, Check } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Check, CloudRain, Volume2, VolumeX } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { BreathingCircle } from '@/components/BreathingCircle';
 import { usePreferences } from '@/hooks/usePreferences';
+import { useAmbientSound } from '@/hooks/useAmbientSound';
 import { cn } from '@/lib/utils';
 
 type Pattern = 'box' | 'long-exhale' | 'silent';
+type AmbientSound = 'rain' | 'brown-noise' | 'silence';
 
 const patterns: { id: Pattern; label: string; description: string }[] = [
   { id: 'box', label: 'Box Calm', description: '4-4-4-4 pattern' },
@@ -14,18 +16,26 @@ const patterns: { id: Pattern; label: string; description: string }[] = [
   { id: 'silent', label: 'Silent Mode', description: 'Vibration only' },
 ];
 
+const ambientSounds: { id: AmbientSound; label: string; icon: typeof CloudRain }[] = [
+  { id: 'silence', label: 'Silence', icon: VolumeX },
+  { id: 'rain', label: 'Rain', icon: CloudRain },
+  { id: 'brown-noise', label: 'Brown Noise', icon: Volume2 },
+];
+
 const durations = [2, 3, 5];
 
 export function Breathing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { preferences } = usePreferences();
+  const { preferences, updatePreference } = usePreferences();
+  const { play: playAmbient, stop: stopAmbient } = useAmbientSound();
 
   const initialPattern = (searchParams.get('pattern') as Pattern) || 'box';
   const initialDuration = parseInt(searchParams.get('duration') || String(preferences.preferredDuration)) || 3;
 
   const [pattern, setPattern] = useState<Pattern>(initialPattern);
   const [duration, setDuration] = useState(initialDuration);
+  const [ambientSound, setAmbientSound] = useState<AmbientSound>(preferences.ambientSound);
   const [isActive, setIsActive] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
@@ -37,14 +47,38 @@ export function Breathing() {
     }
   }, [searchParams]);
 
+  // Start/stop ambient sound based on session state
+  useEffect(() => {
+    if (isActive && ambientSound !== 'silence') {
+      playAmbient(ambientSound);
+    } else {
+      stopAmbient();
+    }
+    
+    return () => {
+      stopAmbient();
+    };
+  }, [isActive, ambientSound, playAmbient, stopAmbient]);
+
+  const handleAmbientChange = (sound: AmbientSound) => {
+    setAmbientSound(sound);
+    updatePreference('ambientSound', sound);
+  };
+
   const handleComplete = () => {
     setIsActive(false);
     setIsComplete(true);
+    stopAmbient();
   };
 
   const handleReset = () => {
     setIsActive(false);
     setIsComplete(false);
+  };
+
+  const handlePause = () => {
+    setIsActive(false);
+    stopAmbient();
   };
 
   if (isComplete) {
@@ -82,13 +116,27 @@ export function Breathing() {
   if (isActive) {
     return (
       <PageContainer className="flex flex-col">
-        <button
-          onClick={() => setIsActive(false)}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
-          <Pause className="w-5 h-5" />
-          <span className="text-sm">Pause</span>
-        </button>
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={handlePause}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Pause className="w-5 h-5" />
+            <span className="text-sm">Pause</span>
+          </button>
+          
+          {/* Ambient sound indicator */}
+          {ambientSound !== 'silence' && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              {ambientSound === 'rain' ? (
+                <CloudRain className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+              <span className="text-xs capitalize">{ambientSound.replace('-', ' ')}</span>
+            </div>
+          )}
+        </div>
 
         <div className="flex-1 flex items-center justify-center">
           <BreathingCircle
@@ -124,7 +172,7 @@ export function Breathing() {
       </div>
 
       {/* Pattern selection */}
-      <div className="mb-8 animate-fade-up delay-100">
+      <div className="mb-6 animate-fade-up delay-100">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
           Breathing Pattern
         </h3>
@@ -145,6 +193,42 @@ export function Breathing() {
               <p className="text-sm text-muted-foreground">{p.description}</p>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Ambient Sound selection */}
+      <div className="mb-6 animate-fade-up delay-150">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+          Ambient Sound
+        </h3>
+        <div className="flex gap-2">
+          {ambientSounds.map((sound) => {
+            const Icon = sound.icon;
+            return (
+              <button
+                key={sound.id}
+                onClick={() => handleAmbientChange(sound.id)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-2 py-4 rounded-2xl border transition-all duration-300",
+                  "active:scale-[0.98] focus:outline-none",
+                  ambientSound === sound.id
+                    ? "bg-accent/15 border-accent/30"
+                    : "bg-secondary/50 border-border/50 hover:bg-secondary"
+                )}
+              >
+                <Icon className={cn(
+                  "w-5 h-5",
+                  ambientSound === sound.id ? "text-accent" : "text-muted-foreground"
+                )} />
+                <span className={cn(
+                  "text-xs",
+                  ambientSound === sound.id ? "text-accent" : "text-muted-foreground"
+                )}>
+                  {sound.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

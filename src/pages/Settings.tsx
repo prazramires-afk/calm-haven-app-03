@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Volume2, Vibrate, Moon, Clock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Volume2, Vibrate, Moon, Clock, Trash2, CloudRain, VolumeX } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { Switch } from '@/components/ui/switch';
 import { usePreferences } from '@/hooks/usePreferences';
@@ -82,26 +82,60 @@ export function Settings() {
             Breathing Defaults
           </h3>
           
-          <div className="p-4 rounded-2xl bg-secondary/50 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <Clock className="w-5 h-5 text-muted-foreground" />
-              <p className="font-medium text-foreground">Default Duration</p>
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-secondary/50 border border-border/50">
+              <div className="flex items-center gap-3 mb-4">
+                <Clock className="w-5 h-5 text-muted-foreground" />
+                <p className="font-medium text-foreground">Default Duration</p>
+              </div>
+              <div className="flex gap-2">
+                {[2, 3, 5].map((duration) => (
+                  <button
+                    key={duration}
+                    onClick={() => updatePreference('preferredDuration', duration)}
+                    className={cn(
+                      "flex-1 py-3 rounded-xl text-center transition-all duration-300",
+                      preferences.preferredDuration === duration
+                        ? "bg-primary/20 text-primary border border-primary/30"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    {duration} min
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2">
-              {[2, 3, 5].map((duration) => (
-                <button
-                  key={duration}
-                  onClick={() => updatePreference('preferredDuration', duration)}
-                  className={cn(
-                    "flex-1 py-3 rounded-xl text-center transition-all duration-300",
-                    preferences.preferredDuration === duration
-                      ? "bg-primary/20 text-primary border border-primary/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  {duration} min
-                </button>
-              ))}
+
+            {/* Ambient Sound */}
+            <div className="p-4 rounded-2xl bg-secondary/50 border border-border/50">
+              <div className="flex items-center gap-3 mb-4">
+                <Volume2 className="w-5 h-5 text-muted-foreground" />
+                <p className="font-medium text-foreground">Default Ambient Sound</p>
+              </div>
+              <div className="flex gap-2">
+                {[
+                  { id: 'silence' as const, label: 'Silence', icon: VolumeX },
+                  { id: 'rain' as const, label: 'Rain', icon: CloudRain },
+                  { id: 'brown-noise' as const, label: 'Brown Noise', icon: Volume2 },
+                ].map((sound) => {
+                  const Icon = sound.icon;
+                  return (
+                    <button
+                      key={sound.id}
+                      onClick={() => updatePreference('ambientSound', sound.id)}
+                      className={cn(
+                        "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-center transition-all duration-300",
+                        preferences.ambientSound === sound.id
+                          ? "bg-accent/20 text-accent border border-accent/30"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="text-xs">{sound.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>

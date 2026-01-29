@@ -5,7 +5,7 @@ export interface UserPreferences {
   vibrationEnabled: boolean;
   darkMode: boolean;
   preferredDuration: number; // in minutes
-  ambientSound: 'rain' | 'brown-noise' | 'silence';
+  ambientSound: 'rain' | 'brown-noise' | 'wind-chime' | 'singing-bowl' | 'silence';
 }
 
 const defaultPreferences: UserPreferences = {

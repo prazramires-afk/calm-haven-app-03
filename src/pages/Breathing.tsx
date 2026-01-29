@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, Check, CloudRain, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Check, CloudRain, Volume2, VolumeX, Wind, Music } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { BreathingCircle } from '@/components/BreathingCircle';
 import { usePreferences } from '@/hooks/usePreferences';
@@ -8,7 +8,7 @@ import { useAmbientSound } from '@/hooks/useAmbientSound';
 import { cn } from '@/lib/utils';
 
 type Pattern = 'box' | 'long-exhale' | 'silent';
-type AmbientSound = 'rain' | 'brown-noise' | 'silence';
+type AmbientSound = 'rain' | 'brown-noise' | 'wind-chime' | 'singing-bowl' | 'silence';
 
 const patterns: { id: Pattern; label: string; description: string }[] = [
   { id: 'box', label: 'Box Calm', description: '4-4-4-4 pattern' },
@@ -19,7 +19,9 @@ const patterns: { id: Pattern; label: string; description: string }[] = [
 const ambientSounds: { id: AmbientSound; label: string; icon: typeof CloudRain }[] = [
   { id: 'silence', label: 'Silence', icon: VolumeX },
   { id: 'rain', label: 'Rain', icon: CloudRain },
-  { id: 'brown-noise', label: 'Brown Noise', icon: Volume2 },
+  { id: 'brown-noise', label: 'Brown', icon: Volume2 },
+  { id: 'wind-chime', label: 'Chime', icon: Wind },
+  { id: 'singing-bowl', label: 'Bowl', icon: Music },
 ];
 
 const durations = [2, 3, 5];
@@ -128,11 +130,10 @@ export function Breathing() {
           {/* Ambient sound indicator */}
           {ambientSound !== 'silence' && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              {ambientSound === 'rain' ? (
-                <CloudRain className="w-4 h-4" />
-              ) : (
-                <Volume2 className="w-4 h-4" />
-              )}
+              {ambientSound === 'rain' && <CloudRain className="w-4 h-4" />}
+              {ambientSound === 'brown-noise' && <Volume2 className="w-4 h-4" />}
+              {ambientSound === 'wind-chime' && <Wind className="w-4 h-4" />}
+              {ambientSound === 'singing-bowl' && <Music className="w-4 h-4" />}
               <span className="text-xs capitalize">{ambientSound.replace('-', ' ')}</span>
             </div>
           )}

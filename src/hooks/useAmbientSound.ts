@@ -1,7 +1,7 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { usePreferences } from './usePreferences';
 
-type AmbientSound = 'rain' | 'brown-noise' | 'silence';
+type AmbientSound = 'rain' | 'brown-noise' | 'wind-chime' | 'singing-bowl' | 'silence';
 
 export function useAmbientSound() {
   const { preferences } = usePreferences();
@@ -58,6 +58,75 @@ export function useAmbientSound() {
     return buffer;
   }, []);
 
+  // Generate wind chime sound buffer
+  const generateWindChime = useCallback((context: AudioContext): AudioBuffer => {
+    const bufferSize = context.sampleRate * 10;
+    const buffer = context.createBuffer(2, bufferSize, context.sampleRate);
+    
+    // Wind chime frequencies (pentatonic scale for pleasant harmonics)
+    const chimeFreqs = [523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+    
+    for (let channel = 0; channel < 2; channel++) {
+      const data = buffer.getChannelData(channel);
+      
+      // Create multiple chime hits throughout the buffer
+      const numChimes = 15;
+      for (let c = 0; c < numChimes; c++) {
+        const startSample = Math.floor(Math.random() * (bufferSize - context.sampleRate));
+        const freq = chimeFreqs[Math.floor(Math.random() * chimeFreqs.length)];
+        const duration = context.sampleRate * (0.8 + Math.random() * 1.5);
+        
+        for (let i = 0; i < duration && (startSample + i) < bufferSize; i++) {
+          const t = i / context.sampleRate;
+          // Exponential decay envelope
+          const envelope = Math.exp(-t * 3);
+          // Sine wave with slight harmonics
+          const sample = Math.sin(2 * Math.PI * freq * t) * 0.5 +
+                        Math.sin(2 * Math.PI * freq * 2 * t) * 0.2 +
+                        Math.sin(2 * Math.PI * freq * 3 * t) * 0.1;
+          data[startSample + i] += sample * envelope * 0.15;
+        }
+      }
+    }
+    
+    return buffer;
+  }, []);
+
+  // Generate singing bowl sound buffer
+  const generateSingingBowl = useCallback((context: AudioContext): AudioBuffer => {
+    const bufferSize = context.sampleRate * 10;
+    const buffer = context.createBuffer(2, bufferSize, context.sampleRate);
+    
+    // Singing bowl fundamental frequency (around 200Hz for a deep bowl)
+    const fundamental = 196; // G3
+    
+    for (let channel = 0; channel < 2; channel++) {
+      const data = buffer.getChannelData(channel);
+      
+      for (let i = 0; i < bufferSize; i++) {
+        const t = i / context.sampleRate;
+        
+        // Slow amplitude modulation for "beating" effect
+        const ampMod = 0.8 + 0.2 * Math.sin(2 * Math.PI * 0.5 * t);
+        
+        // Slight pitch wobble for organic feel
+        const pitchMod = 1 + 0.002 * Math.sin(2 * Math.PI * 0.3 * t);
+        
+        // Rich harmonic content typical of singing bowls
+        const sample = 
+          Math.sin(2 * Math.PI * fundamental * pitchMod * t) * 0.4 +
+          Math.sin(2 * Math.PI * fundamental * 2 * pitchMod * t) * 0.25 +
+          Math.sin(2 * Math.PI * fundamental * 3 * pitchMod * t) * 0.15 +
+          Math.sin(2 * Math.PI * fundamental * 4.2 * pitchMod * t) * 0.1 +
+          Math.sin(2 * Math.PI * fundamental * 5.4 * pitchMod * t) * 0.05;
+        
+        data[i] = sample * ampMod * 0.4;
+      }
+    }
+    
+    return buffer;
+  }, []);
+
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -97,11 +166,19 @@ export function useAmbientSound() {
       // Generate and play the appropriate sound
       let buffer: AudioBuffer;
       
-      if (soundType === 'brown-noise') {
-        buffer = noiseBufferRef.current || generateBrownNoise(context);
-        noiseBufferRef.current = buffer;
-      } else {
-        buffer = generateRainSound(context);
+      switch (soundType) {
+        case 'brown-noise':
+          buffer = noiseBufferRef.current || generateBrownNoise(context);
+          noiseBufferRef.current = buffer;
+          break;
+        case 'wind-chime':
+          buffer = generateWindChime(context);
+          break;
+        case 'singing-bowl':
+          buffer = generateSingingBowl(context);
+          break;
+        default:
+          buffer = generateRainSound(context);
       }
 
       const source = context.createBufferSource();
@@ -115,7 +192,7 @@ export function useAmbientSound() {
     } catch (error) {
       console.warn('Failed to play ambient sound:', error);
     }
-  }, [preferences.soundEnabled, getAudioContext, generateBrownNoise, generateRainSound]);
+  }, [preferences.soundEnabled, getAudioContext, generateBrownNoise, generateRainSound, generateWindChime, generateSingingBowl]);
 
   const stop = useCallback((fadeOutDuration = 1.5) => {
     if (!isPlayingRef.current) return;

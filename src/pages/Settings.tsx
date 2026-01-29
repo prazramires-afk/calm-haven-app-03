@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Volume2, Vibrate, Moon, Clock, Trash2, CloudRain, VolumeX } from 'lucide-react';
+import { ArrowLeft, Volume2, Vibrate, Moon, Clock, Trash2, CloudRain, VolumeX, Wind, Music } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { Switch } from '@/components/ui/switch';
 import { usePreferences } from '@/hooks/usePreferences';
@@ -116,7 +116,9 @@ export function Settings() {
                 {[
                   { id: 'silence' as const, label: 'Silence', icon: VolumeX },
                   { id: 'rain' as const, label: 'Rain', icon: CloudRain },
-                  { id: 'brown-noise' as const, label: 'Brown Noise', icon: Volume2 },
+                  { id: 'brown-noise' as const, label: 'Brown', icon: Volume2 },
+                  { id: 'wind-chime' as const, label: 'Chime', icon: Wind },
+                  { id: 'singing-bowl' as const, label: 'Bowl', icon: Music },
                 ].map((sound) => {
                   const Icon = sound.icon;
                   return (

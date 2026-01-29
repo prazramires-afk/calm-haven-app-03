@@ -19,6 +19,12 @@ export function useJournalEntries() {
     return newEntry.id;
   };
 
+  const updateEntry = (id: string, content: string) => {
+    setEntries(prev => prev.map(e => 
+      e.id === id ? { ...e, content, timestamp: Date.now() } : e
+    ));
+  };
+
   const deleteEntry = (id: string) => {
     setEntries(prev => prev.filter(e => e.id !== id));
   };
@@ -30,6 +36,7 @@ export function useJournalEntries() {
   return {
     entries,
     saveEntry,
+    updateEntry,
     deleteEntry,
     getRecentEntries,
   };

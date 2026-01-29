@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, BookOpen, Trash2, ChevronDown, ChevronUp, Pencil, Check, X } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { useJournalEntries, JournalEntry } from '@/hooks/useJournalEntries';
 import { format } from 'date-fns';
@@ -8,13 +8,17 @@ import { cn } from '@/lib/utils';
 
 function JournalEntryCard({ 
   entry, 
-  onDelete 
+  onDelete,
+  onUpdate,
 }: { 
   entry: JournalEntry; 
   onDelete: (id: string) => void;
+  onUpdate: (id: string, content: string) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(entry.content);
 
   const isLongContent = entry.content.length > 150;
   const displayContent = isExpanded || !isLongContent 
@@ -30,6 +34,24 @@ function JournalEntryCard({
     }
   };
 
+  const handleStartEdit = () => {
+    setEditContent(entry.content);
+    setIsEditing(true);
+    setIsExpanded(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editContent.trim()) {
+      onUpdate(entry.id, editContent.trim());
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditContent(entry.content);
+    setIsEditing(false);
+  };
+
   return (
     <div className="p-4 rounded-2xl bg-secondary/50 border border-border/50 animate-fade-up">
       {/* Header */}
@@ -39,47 +61,101 @@ function JournalEntryCard({
           <span className="mx-2">•</span>
           {format(new Date(entry.timestamp), 'h:mm a')}
         </div>
-        <button
-          onClick={handleDelete}
-          className={cn(
-            "p-2 -m-2 rounded-xl transition-all duration-300",
-            showDeleteConfirm 
-              ? "bg-destructive/20 text-destructive" 
-              : "text-muted-foreground hover:text-destructive"
+        <div className="flex items-center gap-1">
+          {!isEditing && (
+            <button
+              onClick={handleStartEdit}
+              className="p-2 -m-2 rounded-xl text-muted-foreground hover:text-primary transition-all duration-300"
+              aria-label="Edit entry"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
           )}
-          aria-label={showDeleteConfirm ? "Confirm delete" : "Delete entry"}
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+          <button
+            onClick={handleDelete}
+            className={cn(
+              "p-2 -m-2 rounded-xl transition-all duration-300",
+              showDeleteConfirm 
+                ? "bg-destructive/20 text-destructive" 
+                : "text-muted-foreground hover:text-destructive"
+            )}
+            aria-label={showDeleteConfirm ? "Confirm delete" : "Delete entry"}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}
-      <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-        {displayContent}
-      </p>
+      {isEditing ? (
+        <div className="space-y-3">
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className={cn(
+              "w-full min-h-[120px] p-3 rounded-xl resize-none",
+              "bg-background border border-border/50",
+              "text-foreground placeholder:text-muted-foreground/50",
+              "focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-transparent",
+              "transition-all duration-300"
+            )}
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveEdit}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl",
+                "bg-primary/20 text-primary border border-primary/30",
+                "transition-all duration-300 active:scale-[0.98]"
+              )}
+            >
+              <Check className="w-4 h-4" />
+              Save
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl",
+                "bg-secondary/80 text-foreground border border-border/50",
+                "transition-all duration-300 active:scale-[0.98]"
+              )}
+            >
+              <X className="w-4 h-4" />
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+            {displayContent}
+          </p>
 
-      {/* Expand/Collapse */}
-      {isLongContent && (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-1 mt-3 text-sm text-primary hover:text-primary/80 transition-colors"
-        >
-          {isExpanded ? (
-            <>
-              <ChevronUp className="w-4 h-4" />
-              Show less
-            </>
-          ) : (
-            <>
-              <ChevronDown className="w-4 h-4" />
-              Read more
-            </>
+          {/* Expand/Collapse */}
+          {isLongContent && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-1 mt-3 text-sm text-primary hover:text-primary/80 transition-colors"
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  Show less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  Read more
+                </>
+              )}
+            </button>
           )}
-        </button>
+        </>
       )}
 
       {/* Delete confirmation */}
-      {showDeleteConfirm && (
+      {showDeleteConfirm && !isEditing && (
         <p className="mt-3 text-xs text-destructive animate-fade-in">
           Tap again to permanently delete this entry
         </p>
@@ -90,7 +166,7 @@ function JournalEntryCard({
 
 export function Journal() {
   const navigate = useNavigate();
-  const { entries, deleteEntry } = useJournalEntries();
+  const { entries, deleteEntry, updateEntry } = useJournalEntries();
 
   return (
     <PageContainer>
@@ -141,7 +217,8 @@ export function Journal() {
             >
               <JournalEntryCard 
                 entry={entry} 
-                onDelete={deleteEntry} 
+                onDelete={deleteEntry}
+                onUpdate={updateEntry}
               />
             </div>
           ))}

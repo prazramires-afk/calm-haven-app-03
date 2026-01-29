@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { Wind, PenLine, AlertCircle, Heart } from 'lucide-react';
+import { Wind, PenLine, AlertCircle, Heart, BookOpen } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { ActionCard } from '@/components/ActionCard';
 import { useCheckIns } from '@/hooks/useCheckIns';
+import { useJournalEntries } from '@/hooks/useJournalEntries';
 
 export function Home() {
   const navigate = useNavigate();
   const { getWeeklySummary } = useCheckIns();
+  const { entries } = useJournalEntries();
   const summary = getWeeklySummary();
 
   const getGreeting = () => {
@@ -72,6 +74,15 @@ export function Home() {
           description="Immediate grounding support"
           onClick={() => navigate('/sos')}
         />
+
+        {entries.length > 0 && (
+          <ActionCard
+            icon={BookOpen}
+            title="Your Journal"
+            description={`${entries.length} saved ${entries.length === 1 ? 'entry' : 'entries'}`}
+            onClick={() => navigate('/journal')}
+          />
+        )}
       </div>
 
       {/* Weekly Summary (if available) */}

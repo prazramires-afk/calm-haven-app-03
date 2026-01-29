@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Save, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, Save, HelpCircle, BookOpen } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { cn } from '@/lib/utils';
@@ -9,7 +9,7 @@ type Stage = 'write' | 'reflect' | 'releasing' | 'saved';
 
 export function WriteRelease() {
   const navigate = useNavigate();
-  const { saveEntry } = useJournalEntries();
+  const { saveEntry, entries } = useJournalEntries();
   const [content, setContent] = useState('');
   const [stage, setStage] = useState<Stage>('write');
   const [showReflection, setShowReflection] = useState(false);
@@ -86,6 +86,16 @@ export function WriteRelease() {
         <p className="text-muted-foreground text-sm">
           Write everything that's on your mind. No judging.
         </p>
+
+        {entries.length > 0 && (
+          <button
+            onClick={() => navigate('/journal')}
+            className="flex items-center gap-2 mt-3 text-sm text-primary hover:text-primary/80 transition-colors"
+          >
+            <BookOpen className="w-4 h-4" />
+            View {entries.length} saved {entries.length === 1 ? 'entry' : 'entries'}
+          </button>
+        )}
       </div>
 
       {/* Text area */}

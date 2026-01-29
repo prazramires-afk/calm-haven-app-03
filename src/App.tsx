@@ -16,6 +16,7 @@ import CheckIn from "./pages/CheckIn";
 import SOS from "./pages/SOS";
 import Grounding from "./pages/Grounding";
 import Library from "./pages/Library";
+import Journal from "./pages/Journal";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ function AppContent() {
         <Route path="/sos" element={<SOS />} />
         <Route path="/grounding" element={<Grounding />} />
         <Route path="/library" element={<Library />} />
+        <Route path="/journal" element={<Journal />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
